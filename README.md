@@ -32,34 +32,43 @@ share the same `img/` folder, so keep them in the same directory.
 - Results stack the players best-first, with the leader starred, each showing
   their overall percentage plus their positive and negative splits.
 
-It is laid out for a phone held **sideways** — the photographs are 2.58:1, so
-landscape fits them far better than portrait. Held upright, the page shows a
-"turn your phone sideways" prompt instead of the game, with an escape link for
-anyone on a desktop or a narrow window. Rotating mid-game does not lose progress.
+### How it adapts to the screen
 
-### Fitting a landscape phone
+There is no fixed layout and no orientation requirement — it reshapes itself to
+whatever it is opened on.
 
-A phone in landscape has very little height left once the browser takes its cut
-— an iPhone running Safari with the tab bar showing can be down around **225px**.
-Two things keep the layout inside that:
+**Two layouts**, switched on aspect ratio:
 
-- The start screen is **two columns**, so it needs roughly half the height a
-  stacked version would, and below 320px of height a media query compacts
-  everything further (the four answer buttons become a 2×2 grid). Verified with
-  no clipping all the way down to a 200px-tall viewport.
-- Height comes from **`visualViewport.height` via a `--app-h` custom property**,
-  not from `100vh`. iOS Safari's `100vh` counts the space behind its own
-  toolbars, which is what pushed the card off the top and bottom of the screen.
-  `100dvh` is the CSS fix but is unreliable on older iOS, so JS sets the value
-  and `100dvh` is only the fallback.
+- *Portrait* stacks everything: full-width photograph, four full-width answer
+  buttons, and the roster as a vertical list so nobody's answer gets truncated.
+- *Landscape* goes side by side: photograph left, answers right, roster along
+  the bottom, and the results become one compact row per player.
+- Below 330px of height in landscape — a phone whose browser is eating most of
+  the screen — the answer buttons also go 2×2 to halve their height.
+
+**Type scales with the viewport.** Every size derives from one unit,
+`--u: min(2.6vmax, 5.2vh)`, wrapped in `clamp()`. Taking the *smaller* of a
+width-based and a height-based measure is what makes this work in both
+orientations: `vmax` alone grows text until it overflows a short landscape
+screen, `vh` alone makes it tiny in portrait. In practice the answer buttons
+run about 16.6px on a small portrait phone, 20.4px in landscape, and cap at
+22px so they do not balloon on a laptop.
+
+**Height comes from `visualViewport.height`** via a `--app-h` custom property,
+not from `100vh`. iOS Safari's `100vh` counts the space behind its own toolbars,
+which pushed the card off the top and bottom of the screen. `100dvh` is the CSS
+fix but is unreliable on older iOS, so JS sets the value and `100dvh` is only
+the fallback.
+
+Verified with no clipping on all four screens at 360×640, 393×720, 768×1024,
+852×225, 852×393 and 1440×900.
 
 **True fullscreen:** iPhone Safari has no Fullscreen API, so no page can hide
 the browser chrome on its own. The one way to get an edge-to-edge screen is
-*Share → Add to Home Screen* and launching from that icon — the meta tags for
-standalone mode are already in the file, so it opens with no browser UI at all.
-That is worth doing for a phone you will reuse in class, but it is too much
-friction to ask of students scanning a QR code; the layout above is what makes
-the in-browser case work.
+*Share → Add to Home Screen* and launching from that icon — the standalone meta
+tags are already in the file, so it opens with no browser UI at all. Worth doing
+for a phone you reuse in class; too much friction to ask of students scanning a
+QR code, which is why the layout above carries the in-browser case.
 
 Scoring is identical to the short form; there are no population bands, since
 ranking players against each other is the point.

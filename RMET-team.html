@@ -27,16 +27,32 @@
     --p1: #2A7A72;
     --p2: #B8860B;
     --p3: #7A5099;
+
+    /* One unit that answers to BOTH dimensions. vmax alone makes text big on a
+       short landscape phone until it overflows; vh alone makes it tiny in
+       portrait. Taking the smaller of the two keeps text as large as will
+       actually fit, whatever the screen is doing. */
+    --u: min(2.6vmax, 5.2vh);
+
+    --fs-xs: clamp(11px, calc(var(--u) * 0.68), 15px);
+    --fs-sm: clamp(13px, calc(var(--u) * 0.86), 18px);
+    --fs-md: clamp(15px, var(--u),              22px);
+    --fs-lg: clamp(18px, calc(var(--u) * 1.25), 28px);
+    --fs-xl: clamp(23px, calc(var(--u) * 1.80), 44px);
+
+    --gap: clamp(5px, calc(var(--u) * 0.42), 12px);
+    --pad: clamp(8px, calc(var(--u) * 0.62), 20px);
+    --radius: clamp(8px, calc(var(--u) * 0.6), 14px);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   html { height: 100%; }
 
-  /* --app-h is set from JS to the real visible height. iOS Safari's 100vh
-     includes the area behind the toolbars, which is what pushed the card off
-     both ends of the screen; dvh is better but still not reliable on older
-     iOS, so JS has the final say. */
+  /* --app-h is set from JS to the genuinely visible height. iOS Safari's
+     100vh counts the space behind its own toolbars, which pushes the card off
+     the top and bottom of the screen; dvh is better but unreliable on older
+     iOS, so JS has the final say and dvh is only the fallback. */
   body {
     height: 100dvh;
     height: var(--app-h, 100dvh);
@@ -54,130 +70,112 @@
 
   .card {
     flex: 1;
-    margin: 8px auto;
-    width: calc(100% - 16px);
-    max-width: 1000px;
+    min-height: 0;
+    margin: clamp(5px, 1.2vmin, 12px) auto;
+    width: calc(100% - clamp(10px, 2.4vmin, 24px));
+    max-width: 1100px;
     background: var(--cream);
-    border-radius: 14px;
+    border-radius: var(--radius);
     box-shadow: 0 8px 22px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
 
-  .screen { display: none; flex: 1; flex-direction: column; min-height: 0; padding: 10px 14px; }
+  .screen { display: none; flex: 1; min-height: 0; flex-direction: column; padding: var(--pad); }
   .screen.active { display: flex; animation: fade 0.22s ease; }
   @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
-  h1, h2, .big-pct, .pname, .rank { font-family: 'Playfair Display', serif; color: var(--navy); }
+  h1, h2, .big-pct, .pname { font-family: 'Playfair Display', serif; color: var(--navy); }
 
   .label {
-    font-size: 10px; font-weight: 500; letter-spacing: 2.5px;
-    text-transform: uppercase; color: var(--gold); text-align: center;
+    font-size: var(--fs-xs); font-weight: 500;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold);
   }
 
   .btn {
     font-family: 'DM Sans', sans-serif;
-    font-size: 15px; font-weight: 500;
+    font-size: var(--fs-md); font-weight: 500;
     background: var(--navy); color: #FFFDF8;
-    border: 1.5px solid var(--navy); border-radius: 9px;
-    padding: 11px 26px; cursor: pointer; letter-spacing: 0.3px;
+    border: 1.5px solid var(--navy); border-radius: calc(var(--radius) * 0.7);
+    padding: calc(var(--gap) * 0.95) calc(var(--gap) * 2.6);
+    cursor: pointer; letter-spacing: 0.02em;
   }
   .btn:active { transform: translateY(1px); }
   .btn.ghost { background: transparent; color: var(--navy); }
-
-  /* ── Rotate prompt (portrait phones) ───────────────────────────────── */
-  #rotate { display: none; }
-  @media (orientation: portrait) and (max-width: 900px) {
-    .card { display: none; }
-    #rotate {
-      display: flex; flex: 1; flex-direction: column;
-      align-items: center; justify-content: center; gap: 18px;
-      text-align: center; padding: 28px; color: var(--cream);
-    }
-    body.rotate-dismissed .card { display: flex; }
-    body.rotate-dismissed #rotate { display: none; }
-  }
-  #rotate h2 { font-size: 23px; font-weight: 700; color: var(--cream); line-height: 1.25; }
-  .phone-icon { animation: tilt 2.4s ease-in-out infinite; }
-  @keyframes tilt {
-    0%, 35% { transform: rotate(0deg); }
-    55%, 85% { transform: rotate(-90deg); }
-    100% { transform: rotate(0deg); }
-  }
-  .anyway {
-    font-size: 12.5px; color: rgba(249,245,238,0.5);
-    text-decoration: underline; cursor: pointer; margin-top: 4px;
-  }
+  .btn.small { font-size: var(--fs-sm); padding: calc(var(--gap) * 0.6) calc(var(--gap) * 1.5); }
 
   /* ── Start ─────────────────────────────────────────────────────────── */
-  /* Two columns, so the whole screen needs about half the height it would
-     stacked — landscape phones leave very little once Safari takes its cut. */
   #start { justify-content: center; }
-  .start-grid { display: flex; align-items: center; gap: 24px; }
-  .start-left { flex: 1; min-width: 0; text-align: left; }
-  .start-left .label { text-align: left; }
-  .start-right { flex: none; width: 46%; max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 9px; }
-  #start h1 { font-size: 25px; font-weight: 700; line-height: 1.15; margin: 4px 0 5px; }
-  .sub { font-size: 13px; color: var(--muted); }
-  .ask { font-size: 14px; font-weight: 500; color: var(--navy); }
-  .pcount { display: flex; gap: 9px; justify-content: center; }
+  .start-grid { display: flex; flex-direction: column; align-items: center; text-align: center; gap: calc(var(--gap) * 1.6); }
+  .start-left  { min-width: 0; }
+  .start-right { display: flex; flex-direction: column; align-items: center; gap: var(--gap); width: 100%; }
+  #start h1 { font-size: var(--fs-xl); font-weight: 700; line-height: 1.12; margin: calc(var(--gap) * 0.5) 0; }
+  .sub  { font-size: var(--fs-sm); color: var(--muted); line-height: 1.45; }
+  .ask  { font-size: var(--fs-md); font-weight: 500; color: var(--navy); }
+  .cite { font-size: var(--fs-xs); color: var(--muted); font-style: italic; line-height: 1.4; margin-top: var(--gap); }
+
+  .pcount { display: flex; gap: var(--gap); justify-content: center; }
   .pbtn {
     font-family: 'Playfair Display', serif;
-    font-size: 23px; font-weight: 700; color: var(--navy);
+    font-size: var(--fs-lg); font-weight: 700; color: var(--navy);
     background: var(--card-bg); border: 2px solid var(--border);
-    border-radius: 10px; padding: 8px 0; cursor: pointer; width: 92px;
-    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    border-radius: calc(var(--radius) * 0.75);
+    padding: calc(var(--gap) * 0.9) 0;
+    width: clamp(68px, 22vmin, 110px);
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px;
   }
-  .pbtn small { font-family: 'DM Sans', sans-serif; font-size: 9.5px; font-weight: 500; color: var(--muted); letter-spacing: 0.5px; }
+  .pbtn small { font-family: 'DM Sans', sans-serif; font-size: var(--fs-xs); font-weight: 500; color: var(--muted); letter-spacing: 0.08em; }
   .pbtn.sel { background: var(--navy); color: #FFFDF8; border-color: var(--navy); }
   .pbtn.sel small { color: var(--gold-light); }
-  .cite { font-size: 10px; color: var(--muted); font-style: italic; margin-top: 10px; line-height: 1.4; }
 
   /* ── Practice ──────────────────────────────────────────────────────── */
   #practice { justify-content: center; }
-  .prow { display: flex; align-items: center; gap: 16px; }
-  .prow img { flex: 1; min-width: 0; max-height: 190px; border-radius: 7px; border: 1px solid var(--border); object-fit: contain; }
-  .pside { width: 42%; display: flex; flex-direction: column; align-items: flex-start; gap: 11px; }
-  .pnote { font-size: 14px; color: var(--muted); line-height: 1.55; text-align: left; }
+  .prow { display: flex; flex-direction: column; align-items: center; gap: var(--gap); min-height: 0; }
+  .prow img { max-width: 100%; min-height: 0; flex: 0 1 auto; border-radius: calc(var(--radius) * 0.6); border: 1px solid var(--border); object-fit: contain; }
+  .pside { display: flex; flex-direction: column; align-items: center; gap: var(--gap); }
+  .pnote { font-size: var(--fs-sm); color: var(--muted); line-height: 1.5; text-align: center; }
   .pnote b { color: var(--navy); }
 
   /* ── Question ──────────────────────────────────────────────────────── */
-  .top { flex: none; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .track { flex: 1; height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .top { flex: none; display: flex; align-items: center; gap: var(--gap); margin-bottom: var(--gap); }
+  .track { flex: 1; height: clamp(4px, 0.8vmin, 7px); background: var(--border); border-radius: 99px; overflow: hidden; }
   .fill { height: 100%; width: 0%; border-radius: 99px; transition: width 0.35s ease, background 0.2s; }
-  .count { font-size: 11.5px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+  .count { font-size: var(--fs-sm); font-weight: 500; color: var(--muted); white-space: nowrap; }
 
-  .qbody { flex: 1; min-height: 0; display: flex; gap: 14px; }
-  .eyes-wrap { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; }
-  #eyes { max-width: 100%; max-height: 100%; border-radius: 7px; border: 1px solid var(--border); background: #fff; }
+  .qbody { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--gap); }
+  .eyes-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  #eyes { max-width: 100%; max-height: 100%; border-radius: calc(var(--radius) * 0.6); border: 1px solid var(--border); background: #fff; }
 
-  .options { width: 40%; max-width: 310px; display: flex; flex-direction: column; justify-content: center; gap: 7px; }
+  .options { flex: none; display: grid; grid-template-columns: 1fr; gap: var(--gap); align-content: center; }
   .opt {
     font-family: 'DM Sans', sans-serif;
-    font-size: 15.5px; font-weight: 500; color: var(--navy);
+    font-size: var(--fs-md); font-weight: 500; color: var(--navy);
     background: var(--card-bg); border: 1.5px solid var(--border);
-    border-radius: 9px; padding: 11px 8px; cursor: pointer;
-    text-align: center; width: 100%;
+    border-radius: calc(var(--radius) * 0.7);
+    padding: calc(var(--gap) * 1.15) var(--gap);
+    cursor: pointer; text-align: center; width: 100%;
+    min-height: clamp(34px, 7vmin, 54px);
   }
   .opt:active { background: var(--parchment); }
   .opt.chosen { background: var(--navy); border-color: var(--navy); color: #FFFDF8; }
 
-  /* live roster along the bottom */
-  .roster { flex: none; display: flex; gap: 7px; margin-top: 8px; }
+  /* Live roster: every player and what they have picked on this photograph */
+  .roster { flex: none; display: flex; flex-direction: column; gap: calc(var(--gap) * 0.7); margin-top: var(--gap); }
   .rrow {
-    flex: 1; min-width: 0;
-    display: flex; align-items: center; gap: 7px;
-    padding: 6px 9px; border-radius: 8px;
+    flex: 1; min-width: 0; display: flex; align-items: center; gap: calc(var(--gap) * 0.8);
+    padding: calc(var(--gap) * 0.6) var(--gap);
+    border-radius: calc(var(--radius) * 0.6);
     background: var(--card-bg); border: 1.5px solid var(--border);
   }
   .rnum {
-    flex: none; width: 21px; height: 21px; border-radius: 50%;
+    flex: none; border-radius: 50%; color: #FFFDF8;
+    width: clamp(18px, 3.6vmin, 26px); height: clamp(18px, 3.6vmin, 26px);
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Playfair Display', serif; font-size: 12px; font-weight: 700; color: #FFFDF8;
+    font-family: 'Playfair Display', serif; font-size: var(--fs-xs); font-weight: 700;
   }
   .rtext {
-    flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--navy);
+    flex: 1; min-width: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--navy);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .rrow.now { color: #FFFDF8; border-color: transparent; }
@@ -186,82 +184,74 @@
   .rtext.waiting { font-weight: 400; font-style: italic; color: var(--muted); }
 
   /* ── Results ───────────────────────────────────────────────────────── */
-  #results { gap: 7px; overflow-y: auto; }
-  .rhead { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  #results h2 { font-size: 21px; font-weight: 700; }
-  .btn.small { padding: 7px 15px; font-size: 12.5px; }
+  #results { gap: var(--gap); overflow-y: auto; }
+  .rhead { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--gap); }
+  #results h2 { font-size: var(--fs-lg); font-weight: 700; }
+  /* auto margins centre the stack when there is spare height, and collapse
+     to zero when there is not, so scrolling still works on a short screen */
+  #cards { display: flex; flex-direction: column; gap: var(--gap); margin: auto 0; }
 
   .pcard {
     flex: none;
     display: grid;
-    grid-template-columns: 112px 1fr 56px 96px;
-    align-items: center; gap: 11px;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "name pct" "bar bar" "splits splits";
+    align-items: center;
+    gap: calc(var(--gap) * 0.6) var(--gap);
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-left: 5px solid var(--border);
-    border-radius: 10px;
-    padding: 9px 12px;
+    border-radius: calc(var(--radius) * 0.7);
+    padding: calc(var(--gap) * 0.9) var(--gap);
   }
   .pcard.win { border-color: var(--gold); background: #FFFCF2; }
-  .pname { font-size: 15.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mainbar { height: 14px; background: var(--parchment); border-radius: 99px; overflow: hidden; }
-  .mainbar > div { height: 100%; width: 0%; border-radius: 99px; transition: width 0.9s cubic-bezier(0.23,1,0.32,1); }
-  .big-pct { font-size: 21px; font-weight: 700; text-align: right; line-height: 1; }
-  .big-pct small { font-size: 11.5px; color: var(--muted); font-weight: 400; }
-  .splits { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--muted); }
+  .pname  { grid-area: name; font-size: var(--fs-md); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .big-pct { grid-area: pct; font-size: var(--fs-lg); font-weight: 700; text-align: right; line-height: 1; }
+  .big-pct small { font-size: var(--fs-sm); color: var(--muted); font-weight: 400; }
+  .mainbar { grid-area: bar; height: clamp(10px, 2vmin, 16px); background: var(--parchment); border-radius: 99px; overflow: hidden; }
+  .mainbar > span { display: block; height: 100%; width: 0%; border-radius: 99px; transition: width 0.9s cubic-bezier(0.23,1,0.32,1); }
+  .splits { grid-area: splits; display: flex; gap: calc(var(--gap) * 1.6); font-size: var(--fs-xs); color: var(--muted); }
   .splits b { color: var(--navy); font-weight: 700; }
   .pos-dot, .neg-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
   .pos-dot { background: #46A86B; }
   .neg-dot { background: #D1684F; }
 
-  /* ── Short viewports ───────────────────────────────────────────────── */
-  /* A landscape phone leaves very little height once the browser takes its
-     cut — an iPhone with Safari's tab bar showing can be down around 225px.
-     This block must stay last so it wins over the base rules above. */
-  @media (max-height: 320px) {
-    .screen { padding: 7px 11px; }
-    .card { margin: 6px auto; width: calc(100% - 12px); }
-    #start h1 { font-size: 21px; margin: 2px 0 3px; }
-    .sub { font-size: 11.5px; }
-    .cite { font-size: 9px; margin-top: 7px; }
-    .start-grid { gap: 16px; }
-    .start-right { gap: 7px; }
-    .ask { font-size: 13px; }
-    .pbtn { font-size: 19px; padding: 5px 0; width: 78px; }
-    .btn { padding: 8px 20px; font-size: 14px; }
-    /* 2x2 keeps the options half as tall as a single stack */
-    .options { display: grid; grid-template-columns: 1fr 1fr; align-content: center; gap: 6px; width: 46%; max-width: 360px; }
-    .opt { font-size: 13.5px; padding: 8px 5px; border-radius: 8px; }
-    .top { margin-bottom: 5px; }
-    .roster { margin-top: 5px; gap: 5px; }
-    .rrow { padding: 4px 7px; gap: 5px; }
-    .rnum { width: 18px; height: 18px; font-size: 10.5px; }
-    .rtext { font-size: 11.5px; }
-    #results { gap: 5px; }
-    #results h2 { font-size: 18px; }
-    .btn.small { padding: 5px 12px; font-size: 11.5px; }
-    .pcard { padding: 5px 10px; gap: 9px; grid-template-columns: 96px 1fr 48px 88px; }
-    .pname { font-size: 14px; }
-    .big-pct { font-size: 18px; }
-    .splits { font-size: 10px; }
-    .mainbar { height: 12px; }
-    .prow img { max-height: 130px; }
-    .pnote { font-size: 12.5px; line-height: 1.45; }
+  /* ── Landscape / wide: side-by-side instead of stacked ─────────────── */
+  @media (min-aspect-ratio: 1/1) {
+    .start-grid { flex-direction: row; text-align: left; gap: calc(var(--gap) * 2.6); }
+    .start-left { flex: 1; text-align: left; }
+    .start-right { width: 44%; max-width: 360px; flex: none; }
+
+    .prow { flex-direction: row; gap: calc(var(--gap) * 2); }
+    .prow img { flex: 1; min-width: 0; max-height: 100%; }
+    .pside { width: 42%; flex: none; align-items: flex-start; }
+    .pnote { text-align: left; }
+
+    .qbody { flex-direction: row; gap: calc(var(--gap) * 1.6); }
+    .eyes-wrap { flex: 1; min-width: 0; }
+    .options { width: 40%; max-width: 340px; flex: none; }
+
+    .roster { flex-direction: row; }
+
+    /* one compact row per player reads better than a stack when wide */
+    .pcard {
+      grid-template-columns: minmax(84px, 15%) 1fr auto minmax(96px, 18%);
+      grid-template-areas: "name bar pct splits";
+      gap: var(--gap);
+    }
+    .splits { flex-direction: column; gap: 2px; }
+  }
+
+  /* Very short and wide — a landscape phone with a lot of browser chrome.
+     Last so it wins; the answer buttons go 2x2 to halve their height. */
+  @media (min-aspect-ratio: 1/1) and (max-height: 330px) {
+    .options { grid-template-columns: 1fr 1fr; width: 46%; max-width: 380px; }
+    .opt { min-height: 0; padding: calc(var(--gap) * 0.8) calc(var(--gap) * 0.5); }
+    .cite { display: none; }
   }
 </style>
 </head>
 <body>
-
-<!-- Shown instead of the game when a phone is held upright -->
-<div id="rotate">
-  <svg class="phone-icon" width="58" height="58" viewBox="0 0 24 24" fill="none"
-       stroke="#F9F5EE" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <rect x="7" y="2" width="10" height="20" rx="2.2"></rect>
-    <line x1="11" y1="18.6" x2="13" y2="18.6"></line>
-  </svg>
-  <h2>Turn your phone sideways</h2>
-  <span class="anyway" id="anyway">Continue in vertical (may not look good)</span>
-</div>
 
 <div class="card">
 
@@ -291,11 +281,10 @@
     <div class="prow">
       <img src="img/0.jpg" alt="Practice item: the eye region of a face" />
       <div class="pside">
-        <div class="label" style="text-align:left">Example</div>
         <div class="pnote">
-          Pick the word that best describes what the person is thinking or feeling.<br /><br />
-          Here the choices are <b>jealous</b>, <b>panicked</b>, <b>arrogant</b> and <b>hateful</b>
-          &mdash; the answer is <b>panicked</b>.
+          Pick the word that best describes what the person is thinking or feeling.
+          Here the choices are <b>jealous</b>, <b>panicked</b>, <b>arrogant</b> and
+          <b>hateful</b> &mdash; the answer is <b>panicked</b>.
         </div>
         <button class="btn" id="practice-btn">Begin</button>
       </div>
@@ -321,7 +310,7 @@
       <h2>Results</h2>
       <button class="btn ghost small" id="again-btn">↺ Play again</button>
     </div>
-    <div id="cards" style="display:flex;flex-direction:column;gap:7px;"></div>
+    <div id="cards"></div>
   </section>
 
 </div>
@@ -330,12 +319,15 @@
 // ─────────────────────────────────────────────────────────────────────────
 // Reading the Mind in the Eyes — head-to-head short form.
 // Same 18 balanced items (9 positive / 9 negative) and answer key as
-// RMET-noneutral.html, laid out for a phone held sideways.
-// Baron-Cohen, Wheelwright, Hill, Raste & Plumb (2001).
+// RMET-noneutral.html.
 //
-// Players share one screen and answer one after another. Each player's pick
-// appears in the roster along the bottom as soon as they tap it, so everyone
-// can see and argue about the answers as they go.
+// Players share one screen and answer one after another. Each pick appears in
+// the roster as soon as it is tapped, so everyone can see and argue about the
+// answers as they go.
+//
+// The layout adapts to whatever screen it lands on: stacked in portrait,
+// side-by-side in landscape, with type sized from the viewport so it stays
+// readable on a phone and does not blow up on a laptop.
 // ─────────────────────────────────────────────────────────────────────────
 const ITEMS = [
   { n:  1, img: "img/1.jpg", options: ["playful", "comforting", "irritated", "bored"], answer: "playful", answerIndex: 0, valence: "positive", face: "m" },
@@ -378,9 +370,6 @@ function show(id) {
 function playerName(i) { return playerCount === 1 ? 'You' : 'Player ' + (i + 1); }
 
 // ── Real viewport height ────────────────────────────────────────────────
-// iOS Safari's 100vh counts the space behind its own toolbars, so the card
-// used to run off the top and bottom of the screen. visualViewport reports
-// what is actually visible; feed that to CSS and the layout always fits.
 function setAppHeight() {
   const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
   document.documentElement.style.setProperty('--app-h', Math.round(h) + 'px');
@@ -392,9 +381,6 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', setAppHeight);
   window.visualViewport.addEventListener('scroll', setAppHeight);
 }
-
-// ── Rotate prompt ───────────────────────────────────────────────────────
-$('anyway').addEventListener('click', () => document.body.classList.add('rotate-dismissed'));
 
 // ── Start ───────────────────────────────────────────────────────────────
 $('pcount').addEventListener('click', e => {
@@ -424,7 +410,6 @@ const optButtons = [0, 1, 2, 3].map(i => {
   return b;
 });
 
-// The roster shows every player and what they have picked on this photograph.
 function renderRoster() {
   const item = ITEMS[itemIndex];
   $('roster').style.display = playerCount === 1 ? 'none' : 'flex';
@@ -458,7 +443,7 @@ function answer(optionIndex) {
   renderRoster();
 
   const lastPlayer = turn >= playerCount - 1;
-  // Hold a beat on the last answer so everyone can see the full row before it clears
+  // Hold a beat on the last answer so everyone sees the full row before it clears
   setTimeout(() => {
     if (lastPlayer) { turn = 0; itemIndex++; } else { turn++; }
     if (itemIndex >= ITEMS.length) showResults();
@@ -490,7 +475,7 @@ function showResults() {
     return `
       <div class="pcard${win ? ' win' : ''}" style="border-left-color:${s.color}">
         <span class="pname">${win ? '★ ' : ''}${s.name}</span>
-        <span class="mainbar"><span style="display:block;height:100%;background:${s.color}" data-w="${s.total.pct}"></span></span>
+        <span class="mainbar"><span style="background:${s.color}" data-w="${s.total.pct}"></span></span>
         <span class="big-pct">${s.total.pct}<small>%</small></span>
         <span class="splits">
           <span><span class="pos-dot"></span>Positive <b>${s.pos.pct}%</b></span>
@@ -522,16 +507,14 @@ function showResults() {
   console.assert(tally(perfect, i => i.valence === 'positive').total === 9, 'Test 8 failed: positive subscale size wrong');
   console.assert(tally(perfect, i => i.valence === 'negative').total === 9, 'Test 9 failed: negative subscale size wrong');
 
-  // Each player must get an independent answer sheet
   const sheets = Array.from({ length: 3 }, () => new Array(ITEMS.length).fill(null));
   sheets[0][0] = 1;
   console.assert(sheets[1][0] === null && sheets[2][0] === null, 'Test 10 failed: player sheets are shared');
 
   // Turn order: with 3 players every photograph takes exactly 3 answers
   let t = 0, i = 0, steps = 0;
-  const n = 3;
-  while (i < ITEMS.length && steps < 1000) { steps++; if (t >= n - 1) { t = 0; i++; } else t++; }
-  console.assert(steps === ITEMS.length * n, `Test 11 failed: expected ${ITEMS.length * n} answers, got ${steps}`);
+  while (i < ITEMS.length && steps < 1000) { steps++; if (t >= 2) { t = 0; i++; } else t++; }
+  console.assert(steps === ITEMS.length * 3, `Test 11 failed: expected ${ITEMS.length * 3} answers, got ${steps}`);
 
   console.log(`%cAll inline checks passed — ${ITEMS.length} items, ${nPos} positive / ${nNeg} negative.`, 'color: green; font-weight: bold;');
 })();
