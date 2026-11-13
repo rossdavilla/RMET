@@ -143,6 +143,19 @@
   .fill { height: 100%; width: 0%; border-radius: 99px; transition: width 0.35s ease, background 0.2s; }
   .count { font-size: var(--fs-sm); font-weight: 500; color: var(--muted); white-space: nowrap; }
 
+  .turn-banner {
+    flex: none;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: #FFFDF8;
+    border-radius: calc(var(--radius) * 0.6);
+    padding: calc(var(--gap) * 0.55) var(--gap);
+    margin-bottom: var(--gap);
+    letter-spacing: 0.02em;
+    transition: background 0.2s;
+  }
+
   .qbody { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--gap); }
   .eyes-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
   #eyes { max-width: 100%; max-height: 100%; border-radius: calc(var(--radius) * 0.6); border: 1px solid var(--border); background: #fff; }
@@ -168,11 +181,11 @@
     border-radius: calc(var(--radius) * 0.6);
     background: var(--card-bg); border: 1.5px solid var(--border);
   }
-  .rnum {
-    flex: none; border-radius: 50%; color: #FFFDF8;
-    width: clamp(18px, 3.6vmin, 26px); height: clamp(18px, 3.6vmin, 26px);
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Playfair Display', serif; font-size: var(--fs-xs); font-weight: 700;
+  .rtag {
+    flex: none; border-radius: 99px; color: #FFFDF8;
+    padding: 2px calc(var(--gap) * 0.9);
+    font-size: var(--fs-xs); font-weight: 700;
+    white-space: nowrap; letter-spacing: 0.02em;
   }
   .rtext {
     flex: 1; min-width: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--navy);
@@ -180,7 +193,7 @@
   }
   .rrow.now { color: #FFFDF8; border-color: transparent; }
   .rrow.now .rtext { color: #FFFDF8; }
-  .rrow.now .rnum { background: rgba(255,255,255,0.28) !important; }
+  .rrow.now .rtag { background: rgba(255,255,255,0.28) !important; }
   .rtext.waiting { font-weight: 400; font-style: italic; color: var(--muted); }
 
   /* ── Results ───────────────────────────────────────────────────────── */
@@ -297,6 +310,7 @@
       <div class="track"><div class="fill" id="fill"></div></div>
       <div class="count" id="count">1 of 18</div>
     </div>
+    <div class="turn-banner" id="turn-banner">Player 1 choose now</div>
     <div class="qbody">
       <div class="eyes-wrap"><img id="eyes" src="" alt="The eye region of a face" /></div>
       <div class="options" id="options"></div>
@@ -419,7 +433,7 @@ function renderRoster() {
     const answered = pick !== null;
     const text = answered ? item.options[pick] : (isNow ? 'choosing…' : '—');
     return `<div class="rrow${isNow ? ' now' : ''}" style="${isNow ? `background:${PLAYER_COLORS[p]}` : ''}">
-        <span class="rnum" style="${isNow ? '' : `background:${PLAYER_COLORS[p]}`}">${p + 1}</span>
+        <span class="rtag" style="${isNow ? '' : `background:${PLAYER_COLORS[p]}`}">Player ${p + 1}</span>
         <span class="rtext${answered ? '' : ' waiting'}">${text}</span>
       </div>`;
   }).join('');
@@ -431,6 +445,13 @@ function renderQuestion() {
   $('count').textContent = `${itemIndex + 1} of ${ITEMS.length}`;
   $('fill').style.width = (itemIndex / ITEMS.length * 100) + '%';
   $('fill').style.background = PLAYER_COLORS[turn];
+
+  // Whose turn it is, said plainly at the top. Solo play needs no banner.
+  const banner = $('turn-banner');
+  banner.style.display = playerCount === 1 ? 'none' : 'block';
+  banner.textContent = `Player ${turn + 1} choose now`;
+  banner.style.background = PLAYER_COLORS[turn];
+
   optButtons.forEach((b, i) => { b.textContent = item.options[i]; b.classList.remove('chosen'); });
   renderRoster();
   show('question');

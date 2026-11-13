@@ -25,10 +25,12 @@ share the same `img/` folder, so keep them in the same directory.
 `RMET-team.html` runs the same 18 balanced items as a group game on one phone.
 
 - Pick **1, 2 or 3 players** on the start screen.
-- Everyone answers the same photograph in turn on the same screen. Each pick
-  shows up in the roster along the bottom the moment it is tapped, so players
-  can see each other's answers and argue about them as they go. There is no
-  pass-the-phone screen — it is meant to be played together, out loud.
+- Everyone answers the same photograph in turn on the same screen. A banner
+  across the top reads **"Player N choose now"** in that player's colour, and
+  each pick shows up in the roster along the bottom — labelled by player — the
+  moment it is tapped, so everyone can see each other's answers and argue about
+  them as they go. There is no pass-the-phone screen; it is meant to be played
+  together, out loud. Solo play hides both the banner and the roster.
 - Results stack the players best-first, with the leader starred, each showing
   their overall percentage plus their positive and negative splits.
 
