@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reading the Mind in the Eyes — Short Form</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #F9F5EE;
+    --parchment: #EDE7D9;
+    --navy: #1C2B4A;
+    --navy-light: #2E4270;
+    --gold: #B8860B;
+    --gold-light: #D4A843;
+    --teal: #2A7A72;
+    --rose: #B5442E;
+    --text: #2C2C2C;
+    --muted: #7A7167;
+    --border: #D6CCBB;
+    --card-bg: #FFFDF8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    background: var(--navy);
+  }
+
+  /* Fixed 720x450 stage, scaled to fit whatever frame it's placed in */
+  #stage {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 720px;
+    height: 450px;
+    padding: 10px;
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
+    background: radial-gradient(ellipse at 20% 80%, rgba(46,66,112,0.8) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(42,122,114,0.4) 0%, transparent 55%),
+                var(--navy);
+  }
+
+  .card {
+    height: 100%;
+    background: var(--cream);
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+    padding: 14px 24px 12px;
+    overflow: hidden;
+  }
+
+  .screen { display: none; height: 100%; flex-direction: column; }
+  .screen.active { display: flex; animation: slideIn 0.3s ease; }
+  .screen.active.back { animation-name: slideBack; }
+  @keyframes slideIn   { from { opacity: 0; transform: translateX(24px); }  to { opacity: 1; transform: none; } }
+  @keyframes slideBack { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+
+  .label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  h1, h2, .score-big { font-family: 'Playfair Display', serif; color: var(--navy); }
+
+  /* Buttons */
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14.5px;
+    font-weight: 500;
+    background: var(--navy);
+    color: #FFFDF8;
+    border: 1.5px solid var(--navy);
+    border-radius: 8px;
+    padding: 10px 30px;
+    cursor: pointer;
+    letter-spacing: 0.4px;
+    transition: background 0.2s, transform 0.15s, color 0.2s;
+  }
+  .btn:hover { background: var(--navy-light); border-color: var(--navy-light); }
+  .btn:active { transform: translateY(1px); }
+  .btn.ghost { background: transparent; color: var(--navy); }
+  .btn.ghost:hover { background: var(--navy); color: #FFFDF8; }
+  .btn.small { padding: 7px 18px; font-size: 13px; }
+  .btn[hidden] { display: none; }
+
+  /* ── Start screen ── */
+  #start { align-items: center; justify-content: center; text-align: center; }
+  #start h1 { font-size: 33px; font-weight: 700; margin: 8px 0 14px; line-height: 1.15; }
+  .instructions {
+    max-width: 600px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--gold);
+    border-radius: 6px;
+    padding: 12px 18px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted);
+    text-align: left;
+  }
+  .instructions strong { color: var(--navy); font-weight: 500; }
+  .meta { font-size: 12.5px; color: var(--muted); margin: 12px 0 14px; }
+  .cite { font-size: 11px; color: var(--muted); margin-top: 12px; font-style: italic; }
+
+  /* ── Practice screen ── */
+  #practice { align-items: center; justify-content: center; text-align: center; }
+  #practice .label { margin-bottom: 8px; }
+  #practice img { max-width: 420px; max-height: 165px; border-radius: 6px; display: block; }
+  .practice-note { font-size: 14px; color: var(--muted); margin: 12px 0 14px; line-height: 1.6; max-width: 540px; }
+  .practice-note b { color: var(--navy); font-weight: 600; }
+
+  /* ── Question screen ── */
+  .top { flex: none; display: flex; align-items: center; gap: 14px; height: 22px; }
+  .top .label { white-space: nowrap; }
+  .track { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--teal), var(--gold-light));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+  .count { font-size: 12.5px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+
+  .q-body { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+  .eyes-wrap {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  #eyes {
+    max-width: 580px;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #fff;
+  }
+
+  .options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; flex: none; }
+  .opt {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.2;
+    color: var(--muted);
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 6px;
+    min-height: 48px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  .opt .n { font-size: 10px; font-weight: 700; color: var(--gold); }
+  .opt:hover { border-color: var(--navy-light); color: var(--navy); background: var(--parchment); }
+  .opt.selected { background: var(--navy); border-color: var(--navy); color: #FFFDF8; font-weight: 500; }
+  .opt.selected .n { color: var(--gold-light); }
+
+  .foot { flex: none; height: 34px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .hint { font-size: 12.5px; color: var(--muted); font-style: italic; }
+
+  /* ── Results screen ── */
+  #results .top { justify-content: space-between; height: 34px; }
+  #results h2 { font-size: 26px; font-weight: 700; }
+
+  .score-area { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+
+  /* Total score with population bands */
+  .total-row { display: grid; grid-template-columns: 152px 1fr; align-items: center; gap: 16px; }
+  .score-big { font-size: 66px; font-weight: 700; line-height: 1; white-space: nowrap; }
+  .score-big .unit { font-size: 27px; color: var(--muted); font-weight: 400; }
+  .verdict {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    margin-top: 4px;
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 99px;
+  }
+  .v-low  { background: rgba(181,68,46,0.13);  color: var(--rose); }
+  .v-avg  { background: rgba(42,122,114,0.14); color: var(--teal); }
+  .v-high { background: rgba(46,66,112,0.13);  color: var(--navy-light); }
+
+  .band-track {
+    position: relative;
+    height: 48px;
+    display: flex;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .band {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: rgba(44,44,44,0.6);
+  }
+  .band.low  { background: rgba(181,68,46,0.14); }
+  .band.avg  { background: rgba(42,122,114,0.18); }
+  .band.high { background: rgba(46,66,112,0.14); }
+  .marker {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 3px;
+    background: var(--navy);
+    border-radius: 2px;
+    left: 0;
+    transform: translateX(-50%);
+    transition: left 1s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 0 0 2px var(--cream);
+  }
+  .band-scale { position: relative; height: 15px; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .band-scale span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+
+  /* Breakout subscales */
+  .breakouts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+  .bo-row { display: grid; grid-template-columns: 126px 1fr 62px; align-items: center; gap: 9px; }
+  .bo-name { font-size: 14px; color: var(--navy); font-weight: 500; white-space: nowrap; }
+  .bo-track { height: 19px; background: var(--parchment); border-radius: 99px; overflow: hidden; }
+  .bo-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 99px;
+    transition: width 1s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .bo-pos  { background: linear-gradient(90deg, #2A6B45, #46A86B); }
+  .bo-neg  { background: linear-gradient(90deg, #9B3A27, #D1684F); }
+  .bo-men  { background: linear-gradient(90deg, #2E4270, #5878B8); }
+  .bo-wom  { background: linear-gradient(90deg, #7A5099, #A87DC7); }
+  .bo-val { font-size: 14px; font-weight: 700; color: var(--navy); text-align: right; white-space: nowrap; }
+  .bo-val small { font-weight: 400; color: var(--muted); font-size: 11px; }
+
+  .context { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.45; }
+  .context b { color: var(--navy); font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="card">
+
+    <!-- Start -->
+    <section class="screen active" id="start">
+      <div class="label">Psychology Assessment Tool</div>
+      <h1>Reading the Mind in the Eyes<br /><span style="font-size:21px;font-weight:400">Short Form</span></h1>
+      <div class="instructions">
+        <strong>Instructions:</strong> You will see 18 photographs of the eye region of a face. For each one,
+        choose which of the four words best describes what the person is thinking or feeling.
+        You may feel that more than one word fits &mdash; choose the one you consider most suitable.
+        Read all four words before choosing. Work quickly, but you are not timed.
+      </div>
+      <div class="meta">18 photographs &middot; about 5 minutes</div>
+      <button class="btn" id="start-btn">See an example</button>
+      <div class="cite">Baron-Cohen, Wheelwright, Hill, Raste &amp; Plumb (2001). Free for academic, non-commercial use.</div>
+    </section>
+
+    <!-- Practice item -->
+    <section class="screen" id="practice">
+      <div class="label">Example</div>
+      <img id="practice-img" src="img/0.jpg" alt="Practice item: the eye region of a face" />
+      <div class="practice-note">
+        The four choices here are <b>jealous</b>, <b>panicked</b>, <b>arrogant</b> and <b>hateful</b>.<br />
+        The correct answer is <b>panicked</b>.
+      </div>
+      <button class="btn" id="practice-btn">Begin the test</button>
+    </section>
+
+    <!-- Question -->
+    <section class="screen" id="question">
+      <div class="top">
+        <div class="label">Eyes Test</div>
+        <div class="track"><div class="fill" id="fill"></div></div>
+        <div class="count" id="count">1 of 18</div>
+      </div>
+      <div class="q-body">
+        <div class="eyes-wrap"><img id="eyes" src="" alt="The eye region of a face" /></div>
+        <div class="options" id="options"></div>
+      </div>
+      <div class="foot">
+        <button class="btn ghost small" id="back-btn">← Back</button>
+        <span class="hint" id="hint">Click a word to continue</span>
+        <button class="btn small" id="next-btn" hidden>Next →</button>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section class="screen" id="results">
+      <div class="top">
+        <h2>Your Score</h2>
+        <button class="btn ghost small" id="reset-btn">↺ Start Over</button>
+      </div>
+      <div class="score-area">
+        <div class="total-row">
+          <div>
+            <div class="score-big"><span id="score-num">0</span><span class="unit">%</span></div>
+            <span class="verdict" id="verdict">—</span>
+          </div>
+          <div>
+            <div class="band-track" id="band-track">
+              <div class="band low"  id="band-low">Low</div>
+              <div class="band avg"  id="band-avg">Average</div>
+              <div class="band high" id="band-high">High</div>
+              <div class="marker" id="marker"></div>
+            </div>
+            <div class="band-scale" id="band-scale"></div>
+          </div>
+        </div>
+
+        <div class="breakouts">
+          <div class="bo-row">
+            <div class="bo-name">Positive emotions</div>
+            <div class="bo-track"><div class="bo-fill bo-pos" id="bo-positive"></div></div>
+            <div class="bo-val" id="val-positive">—</div>
+          </div>
+          <div class="bo-row">
+            <div class="bo-name">Eyes of men</div>
+            <div class="bo-track"><div class="bo-fill bo-men" id="bo-m"></div></div>
+            <div class="bo-val" id="val-m">—</div>
+          </div>
+          <div class="bo-row">
+            <div class="bo-name">Negative emotions</div>
+            <div class="bo-track"><div class="bo-fill bo-neg" id="bo-negative"></div></div>
+            <div class="bo-val" id="val-negative">—</div>
+          </div>
+          <div class="bo-row">
+            <div class="bo-name">Eyes of women</div>
+            <div class="bo-track"><div class="bo-fill bo-wom" id="bo-f"></div></div>
+            <div class="bo-val" id="val-f">—</div>
+          </div>
+        </div>
+
+        <div class="context" id="context"></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────
+// Reading the Mind in the Eyes Test — Revised (adult) version.
+// Baron-Cohen, Wheelwright, Hill, Raste & Plumb (2001), J Child Psychol
+// Psychiatry 42(2), 241-251. Free for academic, non-commercial use.
+//
+// Items, option wording and option ORDER are reproduced from Appendix A of
+// that paper. `answer` is the paper's italicised target word; `answerIndex`
+// is its 0-based position in `options`.
+//
+// To tweak the test, edit this array: drop items, reword options, or change
+// an answer. Everything downstream (count, progress, scoring) follows from
+// its length, so a shorter list just works.
+// ─────────────────────────────────────────────────────────────────────────
+const ITEMS = [
+  { n:  1, img: "img/1.jpg", options: ["playful", "comforting", "irritated", "bored"], answer: "playful", answerIndex: 0, valence: "positive", face: "m" },
+  { n:  2, img: "img/2.jpg", options: ["terrified", "upset", "arrogant", "annoyed"], answer: "upset", answerIndex: 1, valence: "negative", face: "m" },
+  { n:  3, img: "img/3.jpg", options: ["joking", "flustered", "desire", "convinced"], answer: "desire", answerIndex: 2, valence: "positive", face: "f" },
+  { n:  5, img: "img/5.jpg", options: ["irritated", "sarcastic", "worried", "friendly"], answer: "worried", answerIndex: 2, valence: "negative", face: "m" },
+  { n:  6, img: "img/6.jpg", options: ["aghast", "fantasizing", "impatient", "alarmed"], answer: "fantasizing", answerIndex: 1, valence: "positive", face: "f" },
+  { n:  7, img: "img/7.jpg", options: ["apologetic", "friendly", "uneasy", "dispirited"], answer: "uneasy", answerIndex: 2, valence: "negative", face: "m" },
+  { n:  8, img: "img/8.jpg", options: ["despondent", "relieved", "shy", "excited"], answer: "despondent", answerIndex: 0, valence: "negative", face: "m" },
+  { n: 11, img: "img/11.jpg", options: ["terrified", "amused", "regretful", "flirtatious"], answer: "regretful", answerIndex: 2, valence: "negative", face: "m" },
+  { n: 14, img: "img/14.jpg", options: ["irritated", "disappointed", "depressed", "accusing"], answer: "accusing", answerIndex: 3, valence: "negative", face: "m" },
+  { n: 20, img: "img/20.jpg", options: ["dominant", "friendly", "guilty", "horrified"], answer: "friendly", answerIndex: 1, valence: "positive", face: "m" },
+  { n: 21, img: "img/21.jpg", options: ["embarrassed", "fantasizing", "confused", "panicked"], answer: "fantasizing", answerIndex: 1, valence: "positive", face: "f" },
+  { n: 25, img: "img/25.jpg", options: ["panicked", "incredulous", "despondent", "interested"], answer: "interested", answerIndex: 3, valence: "positive", face: "f" },
+  { n: 26, img: "img/26.jpg", options: ["alarmed", "shy", "hostile", "anxious"], answer: "hostile", answerIndex: 2, valence: "negative", face: "m" },
+  { n: 28, img: "img/28.jpg", options: ["interested", "joking", "affectionate", "contented"], answer: "interested", answerIndex: 0, valence: "positive", face: "f" },
+  { n: 30, img: "img/30.jpg", options: ["grateful", "flirtatious", "hostile", "disappointed"], answer: "flirtatious", answerIndex: 1, valence: "positive", face: "f" },
+  { n: 31, img: "img/31.jpg", options: ["ashamed", "confident", "joking", "dispirited"], answer: "confident", answerIndex: 1, valence: "positive", face: "f" },
+  { n: 33, img: "img/33.jpg", options: ["embarrassed", "guilty", "fantasizing", "concerned"], answer: "concerned", answerIndex: 3, valence: "negative", face: "m" },
+  { n: 35, img: "img/35.jpg", options: ["puzzled", "nervous", "insisting", "contemplative"], answer: "nervous", answerIndex: 1, valence: "negative", face: "f" },
+];
+
+// Practice item (item 0) is shown as an example and is not scored.
+
+// ── State ───────────────────────────────────────────────────────────────
+const answers = new Array(ITEMS.length).fill(null);
+let current = 0;
+let advanceTimer = null;
+
+const $ = id => document.getElementById(id);
+
+function show(id, back = false) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active', 'back'));
+  const el = $(id);
+  void el.offsetWidth; // restart the slide animation
+  el.classList.add('active');
+  if (back) el.classList.add('back');
+}
+
+// ── Question screen ─────────────────────────────────────────────────────
+const optButtons = [0, 1, 2, 3].map(i => {
+  const b = document.createElement('button');
+  b.className = 'opt';
+  b.innerHTML = `<span class="n">${i + 1}</span><span class="w"></span>`;
+  b.addEventListener('click', () => choose(i));
+  $('options').appendChild(b);
+  return b;
+});
+
+function renderQuestion(back = false) {
+  clearTimeout(advanceTimer);
+  const item = ITEMS[current];
+  $('eyes').src = item.img;
+  $('eyes').alt = `Eyes, item ${current + 1} of ${ITEMS.length}`;
+  $('count').textContent = `${current + 1} of ${ITEMS.length}`;
+  $('fill').style.width = (answers.filter(a => a !== null).length / ITEMS.length * 100) + '%';
+  optButtons.forEach((b, i) => {
+    b.querySelector('.w').textContent = item.options[i];
+    b.classList.toggle('selected', answers[current] === i);
+  });
+  const answered = answers[current] !== null;
+  $('next-btn').hidden = !answered;
+  $('hint').style.visibility = answered ? 'hidden' : 'visible';
+  show('question', back);
+}
+
+function choose(index) {
+  answers[current] = index;
+  optButtons.forEach((b, i) => b.classList.toggle('selected', index === i));
+  $('fill').style.width = (answers.filter(a => a !== null).length / ITEMS.length * 100) + '%';
+  clearTimeout(advanceTimer);
+  advanceTimer = setTimeout(next, 300);
+}
+
+function next() {
+  if (answers[current] === null) return;
+  if (current < ITEMS.length - 1) { current++; renderQuestion(); }
+  else showResults();
+}
+
+function back() {
+  if (current === 0) { clearTimeout(advanceTimer); show('practice', true); return; }
+  current--;
+  renderQuestion(true);
+}
+
+// ── Scoring ─────────────────────────────────────────────────────────────
+// One point per item matching the key. Unanswered items score 0.
+function scoreFrom(picks) {
+  return ITEMS.reduce((sum, item, i) => sum + (picks[i] === item.answerIndex ? 1 : 0), 0);
+}
+
+// Correct count and percentage over any subset of items.
+function subscore(picks, predicate) {
+  const subset = ITEMS.map((item, i) => ({ item, i })).filter(({ item }) => predicate(item));
+  const correct = subset.filter(({ item, i }) => picks[i] === item.answerIndex).length;
+  const total = subset.length;
+  return { correct, total, pct: total ? Math.round(correct / total * 100) : null };
+}
+
+// ── Population bands ────────────────────────────────────────────────────
+// Baron-Cohen et al. (2001) report a general-population mean of 26.2 (SD 3.6)
+// on the full 36-item test — 72.8% correct, SD 10.0 points of percentage.
+// Expressing the bands as percentages rather than raw scores keeps them
+// meaningful if the item list is trimmed.
+const NORM = {
+  meanPct: 26.2 / 36 * 100,            // 72.8
+  sdPct:    3.6 / 36 * 100,            // 10.0
+  get lowEdge()  { return this.meanPct - this.sdPct; },   // 62.8
+  get avgEdge()  { return this.meanPct + this.sdPct; },   // 82.8
+};
+
+// Footnote under the results. The short form overrides this.
+const CONTEXT_NOTE =
+  'Short form: 9 positive and 9 negative items, balanced. Bands are prorated from the full ' +
+  '36-item norm (73%, Baron-Cohen et al., 2001) and are <b>not separately validated</b>.';
+
+// Takes a percentage, not a raw score.
+function bandFor(pct) {
+  if (pct <  NORM.lowEdge) return ['low',  'Below average', 'v-low'];
+  if (pct <= NORM.avgEdge) return ['avg',  'Average',       'v-avg'];
+  return                          ['high', 'Above average', 'v-high'];
+}
+
+function showResults() {
+  const score = scoreFrom(answers);
+  const max = ITEMS.length;
+  const pct = max ? Math.round(score / max * 100) : 0;
+  const lowEdge = NORM.lowEdge, avgEdge = NORM.avgEdge;
+
+  $('score-num').textContent = pct;
+
+  const [, verdictText, verdictClass] = bandFor(pct);
+  const verdict = $('verdict');
+  verdict.textContent = verdictText;
+  verdict.className = 'verdict ' + verdictClass;
+
+  // Band widths, proportional to the span each covers
+  $('band-low').style.flexBasis  = lowEdge + '%';
+  $('band-avg').style.flexBasis  = (avgEdge - lowEdge) + '%';
+  $('band-high').style.flexBasis = (100 - avgEdge) + '%';
+
+  // Boundary labels under the track
+  $('band-scale').innerHTML =
+    `<span style="left:0%">0%</span>` +
+    `<span style="left:${lowEdge}%">${Math.round(lowEdge)}%</span>` +
+    `<span style="left:${avgEdge}%">${Math.round(avgEdge)}%</span>` +
+    `<span style="left:100%">100%</span>`;
+
+  $('marker').style.left = '0%';
+
+  const breakouts = [
+    ['positive', it => it.valence === 'positive'],
+    ['negative', it => it.valence === 'negative'],
+    ['m',        it => it.face === 'm'],
+    ['f',        it => it.face === 'f'],
+  ].map(([id, pred]) => [id, subscore(answers, pred)]);
+
+  breakouts.forEach(([id, s]) => {
+    $('bo-' + id).style.width = '0%';
+    $('val-' + id).textContent = s.pct === null ? '—' : s.pct + '%';
+  });
+
+  $('context').innerHTML = CONTEXT_NOTE;
+
+  show('results');
+  setTimeout(() => {
+    $('marker').style.left = Math.max(0, Math.min(100, pct)) + '%';
+    breakouts.forEach(([id, s]) => { $('bo-' + id).style.width = (s.pct || 0) + '%'; });
+  }, 150);
+}
+
+// ── Wiring ──────────────────────────────────────────────────────────────
+$('start-btn').addEventListener('click', () => show('practice'));
+$('practice-btn').addEventListener('click', () => { current = 0; renderQuestion(); });
+$('back-btn').addEventListener('click', back);
+$('next-btn').addEventListener('click', next);
+$('reset-btn').addEventListener('click', () => {
+  answers.fill(null);
+  current = 0;
+  show('start', true);
+});
+
+// Keys 1-4 answer, arrows move between items
+document.addEventListener('keydown', e => {
+  if (!$('question').classList.contains('active')) return;
+  if (e.key >= '1' && e.key <= '4') choose(Number(e.key) - 1);
+  else if (e.key === 'ArrowLeft') back();
+  else if (e.key === 'ArrowRight') next();
+});
+
+// ── Scale stage to fit the frame ────────────────────────────────────────
+function fit() {
+  const s = Math.min(window.innerWidth / 720, window.innerHeight / 450);
+  $('stage').style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+window.addEventListener('resize', fit);
+fit();
+
+// ── Inline checks ───────────────────────────────────────────────────────
+(function runTests() {
+  console.assert(ITEMS.length === 18, `Test 1 failed: expected 18 items, got ${ITEMS.length}`);
+
+  const badOpts = ITEMS.filter(i => !Array.isArray(i.options) || i.options.length !== 4);
+  console.assert(badOpts.length === 0, `Test 2 failed: ${badOpts.length} items without 4 options`);
+
+  const badKey = ITEMS.filter(i => i.options[i.answerIndex] !== i.answer);
+  console.assert(badKey.length === 0, `Test 3 failed: ${badKey.length} items where answerIndex disagrees with answer`);
+
+  const dupes = ITEMS.filter(i => new Set(i.options).size !== 4);
+  console.assert(dupes.length === 0, `Test 4 failed: ${dupes.length} items with repeated options`);
+
+  // A perfect run scores the maximum; an all-first-option run scores the
+  // number of items whose key happens to be option 1.
+  const perfect = scoreFrom(ITEMS.map(i => i.answerIndex));
+  console.assert(perfect === ITEMS.length, `Test 5 failed: perfect run scored ${perfect}`);
+  const allFirst = scoreFrom(ITEMS.map(() => 0));
+  console.assert(allFirst === ITEMS.filter(i => i.answerIndex === 0).length, 'Test 6 failed: all-first-option score mismatch');
+  console.assert(scoreFrom(ITEMS.map(() => null)) === 0, 'Test 7 failed: blank run should score 0');
+
+  // Every item carries a valence and a face
+  const vals = ['positive', 'negative', 'neutral'];
+  console.assert(ITEMS.every(i => vals.includes(i.valence)), 'Test 8 failed: bad valence value');
+  console.assert(ITEMS.every(i => i.face === 'm' || i.face === 'f'), 'Test 9 failed: bad face value');
+
+  const men = ITEMS.filter(i => i.face === 'm').length;
+  const women = ITEMS.filter(i => i.face === 'f').length;
+  // The short form balances VALENCE, not face: dropping items breaks the 18/18
+  // face split of the full test, so both just have to be non-empty.
+  console.assert(men > 0 && women > 0, `Test 10 failed: ${men} men / ${women} women`);
+  console.assert(ITEMS.every(i => i.valence !== 'neutral'), 'Test 10b failed: a neutral item survived the cut');
+  const nPos = ITEMS.filter(i => i.valence === 'positive').length;
+  const nNeg = ITEMS.filter(i => i.valence === 'negative').length;
+  console.assert(nPos === nNeg, `Test 10c failed: valence not balanced — ${nPos} positive / ${nNeg} negative`);
+
+  // A perfect run scores 100% on every breakout; a blank run scores 0%
+  const sub = (picks, p) => subscore(picks, p);
+  const perfectPicks = ITEMS.map(i => i.answerIndex);
+  [['positive', i => i.valence === 'positive'], ['negative', i => i.valence === 'negative'],
+   ['men', i => i.face === 'm'], ['women', i => i.face === 'f']].forEach(([name, p]) => {
+    console.assert(sub(perfectPicks, p).pct === 100, `Test 11 failed: perfect run not 100% on ${name}`);
+    console.assert(sub(ITEMS.map(() => null), p).pct === 0, `Test 12 failed: blank run not 0% on ${name}`);
+  });
+
+  // Subscale counts must partition the test correctly
+  const byValence = vals.map(v => ITEMS.filter(i => i.valence === v).length);
+  console.assert(byValence.reduce((a, b) => a + b, 0) === ITEMS.length, 'Test 13 failed: valence counts do not sum');
+  console.assert(sub(perfectPicks, i => i.face === 'm').total + sub(perfectPicks, i => i.face === 'f').total === ITEMS.length,
+    'Test 14 failed: face counts do not sum');
+
+  // Band boundaries behave (percentages, scale-free)
+  console.assert(bandFor(0)[0] === 'low' && bandFor(62)[0] === 'low' &&
+                 bandFor(63)[0] === 'avg' && bandFor(82)[0] === 'avg' &&
+                 bandFor(83)[0] === 'high' && bandFor(100)[0] === 'high',
+    'Test 15 failed: band cut-points wrong');
+  // A perfect run always lands in the top band, a blank run in the bottom one
+  console.assert(bandFor(100)[0] === 'high', 'Test 16 failed: perfect run not High');
+  console.assert(bandFor(0)[0] === 'low', 'Test 17 failed: blank run not Low');
+
+  console.log(`%cAll inline checks passed — ${ITEMS.length} items, perfect run = ${perfect}, ` +
+    `${men}M/${women}F, valence ${byValence.join('/')} (pos/neg/neu).`, 'color: green; font-weight: bold;');
+})();
+</script>
+</body>
+</html>
