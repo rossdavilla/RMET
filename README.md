@@ -6,19 +6,21 @@ A self-contained local copy of the revised (adult) RMET, built in the same
 ```
 index.html             full test — all 36 items
 RMET-noneutral.html    short form — 18 items, 9 positive + 9 negative
-RMET-team.html         head-to-head game for 1-3 players, landscape phone
+RMET-team.html         head-to-head game for 1-3 players
+RMET-team10.html       the same game cut to 10 items, for when time is short
 img/0.jpg              practice item
 img/1-36.jpg           the 36 test items
 ```
 
-Open any of them in a browser. No build step, no server required. All three
+Open any of them in a browser. No build step, no server required. They all
 share the same `img/` folder, so keep them in the same directory.
 
 | | Items | Time | Layout | Valence |
 |---|---|---|---|---|
 | `index.html` | 36 | ~10 min | 720×450 embed | 9 pos / 14 neg / 13 neutral |
 | `RMET-noneutral.html` | 18 | ~5 min | 720×450 embed | 9 pos / 9 neg |
-| `RMET-team.html` | 18 | ~5–8 min | landscape phone | 9 pos / 9 neg |
+| `RMET-team.html` | 18 | ~5–8 min | any screen | 9 pos / 9 neg |
+| `RMET-team10.html` | 10 | ~3–5 min | any screen | 5 pos / 5 neg |
 
 ### The head-to-head version
 
@@ -74,6 +76,39 @@ QR code, which is why the layout above carries the in-browser case.
 
 Scoring is identical to the short form; there are no population bands, since
 ranking players against each other is the point.
+
+### The 10-item cut
+
+`RMET-team10.html` is the same game at 5 positive and 5 negative items, for when
+a class is running short. Cutting from 18 to 10 removed redundancy before it
+removed anything useful:
+
+- **The two duplicate target words.** *fantasizing* was the answer to both
+  items 6 and 21, *interested* to both 25 and 28 — in a 10-item game, repeating
+  an answer word tips students off. One of each pair went.
+- **The two weakest valence calls**, 3 *desire* and 6 *fantasizing* (see the
+  valence notes above).
+- **Four of the five near-synonymous worry items.** The 18-item set leans hard
+  on anxiety — *upset*, *worried*, *uneasy*, *concerned* and *nervous* are all
+  glossed through "worried / troubled / apprehensive". Only 35 *nervous* stayed.
+
+What is left is ten distinct emotional states, no word repeated:
+
+| | Items | Covering |
+|---|---|---|
+| Positive | 1 playful, 20 friendly, 25 interested, 30 flirtatious, 31 confident | fun, warmth, curiosity, attraction, self-assurance |
+| Negative | 35 nervous, 8 despondent, 11 regretful, 14 accusing, 26 hostile | anxiety, sadness, regret, blame, hostility |
+
+**The results screen reports counts, not percentages.** With five items in each
+subscale a percentage moves 20 points per item, which reads as more precision
+than there is — so it shows "Positive 4 of 5" and a headline of "8/10". The
+bars are still drawn proportionally.
+
+A note on faces, since it is worth knowing rather than fixing: the 18-item set
+is structurally lopsided — eight of its nine negative items are male faces and
+seven of its nine positive items are female. Any small balanced-valence cut
+inherits some of that. This one lands at 6 male / 4 female. The team versions
+show no face breakout, so it does not affect any reported score.
 
 ### What the short form cuts, and why
 

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#1C2B4A" />
+<!-- Added to the home screen, this opens with no browser chrome at all -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Eyes Test" />
+<meta name="mobile-web-app-capable" content="yes" />
+<title>Eyes Test — Head to Head</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #F9F5EE;
+    --parchment: #EDE7D9;
+    --navy: #1C2B4A;
+    --navy-light: #2E4270;
+    --gold: #B8860B;
+    --gold-light: #D4A843;
+    --teal: #2A7A72;
+    --text: #2C2C2C;
+    --muted: #7A7167;
+    --border: #D6CCBB;
+    --card-bg: #FFFDF8;
+    --p1: #2A7A72;
+    --p2: #B8860B;
+    --p3: #7A5099;
+
+    /* One unit that answers to BOTH dimensions. vmax alone makes text big on a
+       short landscape phone until it overflows; vh alone makes it tiny in
+       portrait. Taking the smaller of the two keeps text as large as will
+       actually fit, whatever the screen is doing. */
+    --u: min(2.6vmax, 5.2vh);
+
+    --fs-xs: clamp(11px, calc(var(--u) * 0.68), 15px);
+    --fs-sm: clamp(13px, calc(var(--u) * 0.86), 18px);
+    --fs-md: clamp(15px, var(--u),              22px);
+    --fs-lg: clamp(18px, calc(var(--u) * 1.25), 28px);
+    --fs-xl: clamp(23px, calc(var(--u) * 1.80), 44px);
+
+    --gap: clamp(5px, calc(var(--u) * 0.42), 12px);
+    --pad: clamp(8px, calc(var(--u) * 0.62), 20px);
+    --radius: clamp(8px, calc(var(--u) * 0.6), 14px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html { height: 100%; }
+
+  /* --app-h is set from JS to the genuinely visible height. iOS Safari's
+     100vh counts the space behind its own toolbars, which pushes the card off
+     the top and bottom of the screen; dvh is better but unreliable on older
+     iOS, so JS has the final say and dvh is only the fallback. */
+  body {
+    height: 100dvh;
+    height: var(--app-h, 100dvh);
+    max-height: var(--app-h, 100dvh);
+    overflow: hidden;
+    display: flex;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    overscroll-behavior: none;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    background: radial-gradient(ellipse at 20% 85%, rgba(46,66,112,0.85) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 15%, rgba(42,122,114,0.45) 0%, transparent 55%),
+                var(--navy);
+  }
+
+  .card {
+    flex: 1;
+    min-height: 0;
+    margin: clamp(5px, 1.2vmin, 12px) auto;
+    width: calc(100% - clamp(10px, 2.4vmin, 24px));
+    max-width: 1100px;
+    background: var(--cream);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .screen { display: none; flex: 1; min-height: 0; flex-direction: column; padding: var(--pad); }
+  .screen.active { display: flex; animation: fade 0.22s ease; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+  h1, h2, .big-pct, .pname { font-family: 'Playfair Display', serif; color: var(--navy); }
+
+  .label {
+    font-size: var(--fs-xs); font-weight: 500;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold);
+  }
+
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: var(--fs-md); font-weight: 500;
+    background: var(--navy); color: #FFFDF8;
+    border: 1.5px solid var(--navy); border-radius: calc(var(--radius) * 0.7);
+    padding: calc(var(--gap) * 0.95) calc(var(--gap) * 2.6);
+    cursor: pointer; letter-spacing: 0.02em;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn.ghost { background: transparent; color: var(--navy); }
+  .btn.small { font-size: var(--fs-sm); padding: calc(var(--gap) * 0.6) calc(var(--gap) * 1.5); }
+
+  /* ── Start ─────────────────────────────────────────────────────────── */
+  #start { justify-content: center; }
+  .start-grid { display: flex; flex-direction: column; align-items: center; text-align: center; gap: calc(var(--gap) * 1.6); }
+  .start-left  { min-width: 0; }
+  .start-right { display: flex; flex-direction: column; align-items: center; gap: var(--gap); width: 100%; }
+  #start h1 { font-size: var(--fs-xl); font-weight: 700; line-height: 1.12; margin: calc(var(--gap) * 0.5) 0; }
+  .sub  { font-size: var(--fs-sm); color: var(--muted); line-height: 1.45; }
+  .ask  { font-size: var(--fs-md); font-weight: 500; color: var(--navy); }
+  .cite { font-size: var(--fs-xs); color: var(--muted); font-style: italic; line-height: 1.4; margin-top: var(--gap); }
+
+  .pcount { display: flex; gap: var(--gap); justify-content: center; }
+  .pbtn {
+    font-family: 'Playfair Display', serif;
+    font-size: var(--fs-lg); font-weight: 700; color: var(--navy);
+    background: var(--card-bg); border: 2px solid var(--border);
+    border-radius: calc(var(--radius) * 0.75);
+    padding: calc(var(--gap) * 0.9) 0;
+    width: clamp(68px, 22vmin, 110px);
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  }
+  .pbtn small { font-family: 'DM Sans', sans-serif; font-size: var(--fs-xs); font-weight: 500; color: var(--muted); letter-spacing: 0.08em; }
+  .pbtn.sel { background: var(--navy); color: #FFFDF8; border-color: var(--navy); }
+  .pbtn.sel small { color: var(--gold-light); }
+
+  /* ── Practice ──────────────────────────────────────────────────────── */
+  #practice { justify-content: center; }
+  .prow { display: flex; flex-direction: column; align-items: center; gap: var(--gap); min-height: 0; }
+  .prow img { max-width: 100%; min-height: 0; flex: 0 1 auto; border-radius: calc(var(--radius) * 0.6); border: 1px solid var(--border); object-fit: contain; }
+  .pside { display: flex; flex-direction: column; align-items: center; gap: var(--gap); }
+  .pnote { font-size: var(--fs-sm); color: var(--muted); line-height: 1.5; text-align: center; }
+  .pnote b { color: var(--navy); }
+
+  /* ── Question ──────────────────────────────────────────────────────── */
+  .top { flex: none; display: flex; align-items: center; gap: var(--gap); margin-bottom: var(--gap); }
+  .track { flex: 1; height: clamp(4px, 0.8vmin, 7px); background: var(--border); border-radius: 99px; overflow: hidden; }
+  .fill { height: 100%; width: 0%; border-radius: 99px; transition: width 0.35s ease, background 0.2s; }
+  .count { font-size: var(--fs-sm); font-weight: 500; color: var(--muted); white-space: nowrap; }
+
+  .turn-banner {
+    flex: none;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: #FFFDF8;
+    border-radius: calc(var(--radius) * 0.6);
+    padding: calc(var(--gap) * 0.55) var(--gap);
+    margin-bottom: var(--gap);
+    letter-spacing: 0.02em;
+    transition: background 0.2s;
+  }
+
+  .qbody { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--gap); }
+  .eyes-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  #eyes { max-width: 100%; max-height: 100%; border-radius: calc(var(--radius) * 0.6); border: 1px solid var(--border); background: #fff; }
+
+  .options { flex: none; display: grid; grid-template-columns: 1fr; gap: var(--gap); align-content: center; }
+  .opt {
+    font-family: 'DM Sans', sans-serif;
+    font-size: var(--fs-md); font-weight: 500; color: var(--navy); line-height: 1.2;
+    background: var(--card-bg); border: 1.5px solid var(--border);
+    border-radius: calc(var(--radius) * 0.7);
+    padding: calc(var(--gap) * 1.15) var(--gap);
+    cursor: pointer; text-align: center; width: 100%;
+    min-height: clamp(34px, 7vmin, 54px);
+    /* Centre the label explicitly. Left to a button's own layout, Safari
+       drops the text toward the bottom once min-height makes the box taller
+       than the line, which Chromium does not do. */
+    display: flex; align-items: center; justify-content: center;
+  }
+  .opt:active { background: var(--parchment); }
+  .opt.chosen { background: var(--navy); border-color: var(--navy); color: #FFFDF8; }
+
+  /* Live roster: every player and what they have picked on this photograph */
+  .roster { flex: none; display: flex; flex-direction: column; gap: calc(var(--gap) * 0.7); margin-top: var(--gap); }
+  .rrow {
+    flex: 1; min-width: 0; display: flex; align-items: center; gap: calc(var(--gap) * 0.8);
+    padding: calc(var(--gap) * 0.6) var(--gap);
+    border-radius: calc(var(--radius) * 0.6);
+    background: var(--card-bg); border: 1.5px solid var(--border);
+  }
+  .rtag {
+    flex: none; border-radius: 99px; color: #FFFDF8;
+    padding: 2px calc(var(--gap) * 0.9);
+    font-size: var(--fs-xs); font-weight: 700;
+    white-space: nowrap; letter-spacing: 0.02em;
+  }
+  .rtext {
+    flex: 1; min-width: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--navy);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .rrow.now { color: #FFFDF8; border-color: transparent; }
+  .rrow.now .rtext { color: #FFFDF8; }
+  .rrow.now .rtag { background: rgba(255,255,255,0.28) !important; }
+  .rtext.waiting { font-weight: 400; font-style: italic; color: var(--muted); }
+
+  /* ── Results ───────────────────────────────────────────────────────── */
+  #results { gap: var(--gap); overflow-y: auto; }
+  .rhead { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--gap); }
+  #results h2 { font-size: var(--fs-lg); font-weight: 700; }
+  /* auto margins centre the stack when there is spare height, and collapse
+     to zero when there is not, so scrolling still works on a short screen */
+  #cards { display: flex; flex-direction: column; gap: var(--gap); margin: auto 0; }
+
+  .pcard {
+    flex: none;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "name pct" "bar bar" "splits splits";
+    align-items: center;
+    gap: calc(var(--gap) * 0.6) var(--gap);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--border);
+    border-radius: calc(var(--radius) * 0.7);
+    padding: calc(var(--gap) * 0.9) var(--gap);
+  }
+  .pcard.win { border-color: var(--gold); background: #FFFCF2; }
+  .pname  { grid-area: name; font-size: var(--fs-md); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .big-pct { grid-area: pct; font-size: var(--fs-lg); font-weight: 700; text-align: right; line-height: 1; }
+  .big-pct small { font-size: var(--fs-sm); color: var(--muted); font-weight: 400; }
+  .mainbar { grid-area: bar; height: clamp(10px, 2vmin, 16px); background: var(--parchment); border-radius: 99px; overflow: hidden; }
+  .mainbar > span { display: block; height: 100%; width: 0%; border-radius: 99px; transition: width 0.9s cubic-bezier(0.23,1,0.32,1); }
+  .splits { grid-area: splits; display: flex; gap: calc(var(--gap) * 1.6); font-size: var(--fs-xs); color: var(--muted); }
+  .splits b { color: var(--navy); font-weight: 700; }
+  .pos-dot, .neg-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
+  .pos-dot { background: #46A86B; }
+  .neg-dot { background: #D1684F; }
+
+  /* ── Landscape / wide: side-by-side instead of stacked ─────────────── */
+  @media (min-aspect-ratio: 1/1) {
+    .start-grid { flex-direction: row; text-align: left; gap: calc(var(--gap) * 2.6); }
+    .start-left { flex: 1; text-align: left; }
+    .start-right { width: 44%; max-width: 360px; flex: none; }
+
+    .prow { flex-direction: row; gap: calc(var(--gap) * 2); }
+    .prow img { flex: 1; min-width: 0; max-height: 100%; }
+    .pside { width: 42%; flex: none; align-items: flex-start; }
+    .pnote { text-align: left; }
+
+    .qbody { flex-direction: row; gap: calc(var(--gap) * 1.6); }
+    .eyes-wrap { flex: 1; min-width: 0; }
+    .options { width: 40%; max-width: 340px; flex: none; }
+
+    .roster { flex-direction: row; }
+
+    /* one compact row per player reads better than a stack when wide */
+    .pcard {
+      grid-template-columns: minmax(84px, 15%) 1fr auto minmax(96px, 18%);
+      grid-template-areas: "name bar pct splits";
+      gap: var(--gap);
+    }
+    .splits { flex-direction: column; gap: 2px; }
+  }
+
+  /* Very short and wide — a landscape phone with a lot of browser chrome.
+     Last so it wins; the answer buttons go 2x2 to halve their height. */
+  @media (min-aspect-ratio: 1/1) and (max-height: 330px) {
+    .options { grid-template-columns: 1fr 1fr; width: 46%; max-width: 380px; }
+    .opt { min-height: 0; padding: calc(var(--gap) * 0.8) calc(var(--gap) * 0.5); }
+    .cite { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Start -->
+  <section class="screen active" id="start">
+    <div class="start-grid">
+      <div class="start-left">
+        <div class="label">Psychology Assessment Tool</div>
+        <h1>Reading the Mind in the Eyes</h1>
+        <div class="sub">Head to head &mdash; 10 photographs, one phone, take turns.</div>
+        <div class="cite">Baron-Cohen, Wheelwright, Hill, Raste &amp; Plumb (2001). Free for academic, non-commercial use.</div>
+      </div>
+      <div class="start-right">
+        <div class="ask">How many players?</div>
+        <div class="pcount" id="pcount">
+          <button class="pbtn" data-n="1">1<small>SOLO</small></button>
+          <button class="pbtn sel" data-n="2">2<small>PLAYERS</small></button>
+          <button class="pbtn" data-n="3">3<small>PLAYERS</small></button>
+        </div>
+        <button class="btn" id="start-btn">Start</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Practice -->
+  <section class="screen" id="practice">
+    <div class="prow">
+      <img src="img/0.jpg" alt="Practice item: the eye region of a face" />
+      <div class="pside">
+        <div class="pnote">
+          Pick the word that best describes what the person is thinking or feeling.
+          Here the choices are <b>jealous</b>, <b>panicked</b>, <b>arrogant</b> and
+          <b>hateful</b> &mdash; the answer is <b>panicked</b>.
+        </div>
+        <button class="btn" id="practice-btn">Begin</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Question -->
+  <section class="screen" id="question">
+    <div class="top">
+      <div class="track"><div class="fill" id="fill"></div></div>
+      <div class="count" id="count">1 of 10</div>
+    </div>
+    <div class="turn-banner" id="turn-banner">Player 1 choose now</div>
+    <div class="qbody">
+      <div class="eyes-wrap"><img id="eyes" src="" alt="The eye region of a face" /></div>
+      <div class="options" id="options"></div>
+    </div>
+    <div class="roster" id="roster"></div>
+  </section>
+
+  <!-- Results -->
+  <section class="screen" id="results">
+    <div class="rhead">
+      <h2>Results</h2>
+      <button class="btn ghost small" id="again-btn">↺ Play again</button>
+    </div>
+    <div id="cards"></div>
+  </section>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────
+// Reading the Mind in the Eyes — head-to-head short form.
+// A 10-item cut of the balanced short form: 5 positive and 5 negative
+// items, each naming a distinct emotional state. Same answer key.
+//
+// Players share one screen and answer one after another. Each pick appears in
+// the roster as soon as it is tapped, so everyone can see and argue about the
+// answers as they go.
+//
+// The layout adapts to whatever screen it lands on: stacked in portrait,
+// side-by-side in landscape, with type sized from the viewport so it stays
+// readable on a phone and does not blow up on a laptop.
+// ─────────────────────────────────────────────────────────────────────────
+const ITEMS = [
+  { n:  1, img: "img/1.jpg", options: ["playful", "comforting", "irritated", "bored"], answer: "playful", answerIndex: 0, valence: "positive", face: "m" },
+  { n:  8, img: "img/8.jpg", options: ["despondent", "relieved", "shy", "excited"], answer: "despondent", answerIndex: 0, valence: "negative", face: "m" },
+  { n: 11, img: "img/11.jpg", options: ["terrified", "amused", "regretful", "flirtatious"], answer: "regretful", answerIndex: 2, valence: "negative", face: "m" },
+  { n: 14, img: "img/14.jpg", options: ["irritated", "disappointed", "depressed", "accusing"], answer: "accusing", answerIndex: 3, valence: "negative", face: "m" },
+  { n: 20, img: "img/20.jpg", options: ["dominant", "friendly", "guilty", "horrified"], answer: "friendly", answerIndex: 1, valence: "positive", face: "m" },
+  { n: 25, img: "img/25.jpg", options: ["panicked", "incredulous", "despondent", "interested"], answer: "interested", answerIndex: 3, valence: "positive", face: "f" },
+  { n: 26, img: "img/26.jpg", options: ["alarmed", "shy", "hostile", "anxious"], answer: "hostile", answerIndex: 2, valence: "negative", face: "m" },
+  { n: 30, img: "img/30.jpg", options: ["grateful", "flirtatious", "hostile", "disappointed"], answer: "flirtatious", answerIndex: 1, valence: "positive", face: "f" },
+  { n: 31, img: "img/31.jpg", options: ["ashamed", "confident", "joking", "dispirited"], answer: "confident", answerIndex: 1, valence: "positive", face: "f" },
+  { n: 35, img: "img/35.jpg", options: ["puzzled", "nervous", "insisting", "contemplative"], answer: "nervous", answerIndex: 1, valence: "negative", face: "f" },
+];
+
+const PLAYER_COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)'];
+
+// ── State ───────────────────────────────────────────────────────────────
+let playerCount = 2;
+let itemIndex = 0;   // which photograph
+let turn = 0;        // which player answers next
+let picks = [];      // picks[player][item] = option index
+
+const $ = id => document.getElementById(id);
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = $(id);
+  void el.offsetWidth;
+  el.classList.add('active');
+}
+
+function playerName(i) { return playerCount === 1 ? 'You' : 'Player ' + (i + 1); }
+
+// ── Real viewport height ────────────────────────────────────────────────
+function setAppHeight() {
+  const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+  document.documentElement.style.setProperty('--app-h', Math.round(h) + 'px');
+}
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 200));
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', setAppHeight);
+  window.visualViewport.addEventListener('scroll', setAppHeight);
+}
+
+// ── Start ───────────────────────────────────────────────────────────────
+$('pcount').addEventListener('click', e => {
+  const b = e.target.closest('.pbtn');
+  if (!b) return;
+  playerCount = Number(b.dataset.n);
+  document.querySelectorAll('.pbtn').forEach(x => x.classList.toggle('sel', x === b));
+});
+
+$('start-btn').addEventListener('click', () => show('practice'));
+$('practice-btn').addEventListener('click', beginGame);
+$('again-btn').addEventListener('click', () => show('start'));
+
+function beginGame() {
+  picks = Array.from({ length: playerCount }, () => new Array(ITEMS.length).fill(null));
+  itemIndex = 0;
+  turn = 0;
+  renderQuestion();
+}
+
+// ── Question ────────────────────────────────────────────────────────────
+const optButtons = [0, 1, 2, 3].map(i => {
+  const b = document.createElement('button');
+  b.className = 'opt';
+  b.addEventListener('click', () => answer(i));
+  $('options').appendChild(b);
+  return b;
+});
+
+function renderRoster() {
+  const item = ITEMS[itemIndex];
+  $('roster').style.display = playerCount === 1 ? 'none' : 'flex';
+  $('roster').innerHTML = picks.map((sheet, p) => {
+    const isNow = p === turn;
+    const pick = sheet[itemIndex];
+    const answered = pick !== null;
+    const text = answered ? item.options[pick] : (isNow ? 'choosing…' : '—');
+    return `<div class="rrow${isNow ? ' now' : ''}" style="${isNow ? `background:${PLAYER_COLORS[p]}` : ''}">
+        <span class="rtag" style="${isNow ? '' : `background:${PLAYER_COLORS[p]}`}">Player ${p + 1}</span>
+        <span class="rtext${answered ? '' : ' waiting'}">${text}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderQuestion() {
+  const item = ITEMS[itemIndex];
+  $('eyes').src = item.img;
+  $('count').textContent = `${itemIndex + 1} of ${ITEMS.length}`;
+  $('fill').style.width = (itemIndex / ITEMS.length * 100) + '%';
+  $('fill').style.background = PLAYER_COLORS[turn];
+
+  // Whose turn it is, said plainly at the top. Solo play needs no banner.
+  const banner = $('turn-banner');
+  banner.style.display = playerCount === 1 ? 'none' : 'block';
+  banner.textContent = `Player ${turn + 1} choose now`;
+  banner.style.background = PLAYER_COLORS[turn];
+
+  optButtons.forEach((b, i) => { b.textContent = item.options[i]; b.classList.remove('chosen'); });
+  renderRoster();
+  show('question');
+}
+
+function answer(optionIndex) {
+  if (picks[turn][itemIndex] !== null) return;   // guard against a double tap
+  picks[turn][itemIndex] = optionIndex;
+  optButtons.forEach((b, i) => b.classList.toggle('chosen', i === optionIndex));
+  renderRoster();
+
+  const lastPlayer = turn >= playerCount - 1;
+  // Hold a beat on the last answer so everyone sees the full row before it clears
+  setTimeout(() => {
+    if (lastPlayer) { turn = 0; itemIndex++; } else { turn++; }
+    if (itemIndex >= ITEMS.length) showResults();
+    else renderQuestion();
+  }, lastPlayer && playerCount > 1 ? 950 : 260);
+}
+
+// ── Scoring ─────────────────────────────────────────────────────────────
+function tally(sheet, predicate) {
+  const subset = ITEMS.map((item, i) => ({ item, i })).filter(({ item }) => !predicate || predicate(item));
+  const correct = subset.filter(({ item, i }) => sheet[i] === item.answerIndex).length;
+  return { correct, total: subset.length, pct: subset.length ? Math.round(correct / subset.length * 100) : 0 };
+}
+
+function showResults() {
+  const scored = picks.map((sheet, i) => ({
+    name: playerName(i),
+    color: PLAYER_COLORS[i],
+    total: tally(sheet, null),
+    pos: tally(sheet, it => it.valence === 'positive'),
+    neg: tally(sheet, it => it.valence === 'negative'),
+  }));
+
+  const best = Math.max(...scored.map(s => s.total.correct));
+  const ordered = [...scored].sort((a, b) => b.total.correct - a.total.correct);
+
+  $('cards').innerHTML = ordered.map(s => {
+    const win = playerCount > 1 && s.total.correct === best;
+    return `
+      <div class="pcard${win ? ' win' : ''}" style="border-left-color:${s.color}">
+        <span class="pname">${win ? '★ ' : ''}${s.name}</span>
+        <span class="mainbar"><span style="background:${s.color}" data-w="${s.total.pct}"></span></span>
+        <span class="big-pct">${s.total.correct}<small>/${s.total.total}</small></span>
+        <span class="splits">
+          <span><span class="pos-dot"></span>Positive <b>${s.pos.correct} of ${s.pos.total}</b></span>
+          <span><span class="neg-dot"></span>Negative <b>${s.neg.correct} of ${s.neg.total}</b></span>
+        </span>
+      </div>`;
+  }).join('');
+
+  show('results');
+  setTimeout(() => {
+    document.querySelectorAll('#cards [data-w]').forEach(el => { el.style.width = el.dataset.w + '%'; });
+  }, 120);
+}
+
+// ── Inline checks ───────────────────────────────────────────────────────
+(function runTests() {
+  console.assert(ITEMS.length === 10, `Test 1 failed: expected 10 items, got ${ITEMS.length}`);
+  console.assert(ITEMS.every(i => i.options.length === 4), 'Test 2 failed: an item lacks 4 options');
+  console.assert(ITEMS.every(i => i.options[i.answerIndex] === i.answer), 'Test 3 failed: answerIndex disagrees with answer');
+
+  const nPos = ITEMS.filter(i => i.valence === 'positive').length;
+  const nNeg = ITEMS.filter(i => i.valence === 'negative').length;
+  console.assert(nPos === nNeg && nPos === 5, `Test 4 failed: expected 5/5, got ${nPos}/${nNeg}`);
+  console.assert(ITEMS.every(i => i.valence !== 'neutral'), 'Test 5 failed: a neutral item is present');
+
+  const perfect = ITEMS.map(i => i.answerIndex);
+  console.assert(tally(perfect, null).pct === 100, 'Test 6 failed: perfect run is not 100%');
+  console.assert(tally(new Array(ITEMS.length).fill(null), null).pct === 0, 'Test 7 failed: blank run is not 0%');
+  console.assert(tally(perfect, i => i.valence === 'positive').total === 5, 'Test 8 failed: positive subscale size wrong');
+  console.assert(tally(perfect, i => i.valence === 'negative').total === 5, 'Test 9 failed: negative subscale size wrong');
+
+  const sheets = Array.from({ length: 3 }, () => new Array(ITEMS.length).fill(null));
+  sheets[0][0] = 1;
+  console.assert(sheets[1][0] === null && sheets[2][0] === null, 'Test 10 failed: player sheets are shared');
+
+  // Turn order: with 3 players every photograph takes exactly 3 answers
+  let t = 0, i = 0, steps = 0;
+  while (i < ITEMS.length && steps < 1000) { steps++; if (t >= 2) { t = 0; i++; } else t++; }
+  console.assert(steps === ITEMS.length * 3, `Test 11 failed: expected ${ITEMS.length * 3} answers, got ${steps}`);
+
+  console.log(`%cAll inline checks passed — ${ITEMS.length} items, ${nPos} positive / ${nNeg} negative.`, 'color: green; font-weight: bold;');
+})();
+</script>
+</body>
+</html>
