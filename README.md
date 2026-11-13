@@ -6,17 +6,40 @@ A self-contained local copy of the revised (adult) RMET, built in the same
 ```
 index.html             full test — all 36 items
 RMET-noneutral.html    short form — 18 items, 9 positive + 9 negative
+RMET-team.html         head-to-head game for 1-3 players, landscape phone
 img/0.jpg              practice item
 img/1-36.jpg           the 36 test items
 ```
 
-Open either file in a browser. No build step, no server required. Both share the
-same `img/` folder, so keep them in the same directory.
+Open any of them in a browser. No build step, no server required. All three
+share the same `img/` folder, so keep them in the same directory.
 
-| | Items | Time | Valence | Faces |
+| | Items | Time | Layout | Valence |
 |---|---|---|---|---|
-| `index.html` | 36 | ~10 min | 9 pos / 14 neg / 13 neutral | 18 M / 18 F |
-| `RMET-noneutral.html` | 18 | ~5 min | 9 pos / 9 neg | 10 M / 8 F |
+| `index.html` | 36 | ~10 min | 720×450 embed | 9 pos / 14 neg / 13 neutral |
+| `RMET-noneutral.html` | 18 | ~5 min | 720×450 embed | 9 pos / 9 neg |
+| `RMET-team.html` | 18 | ~5–8 min | landscape phone | 9 pos / 9 neg |
+
+### The head-to-head version
+
+`RMET-team.html` runs the same 18 balanced items as a group game on one phone.
+
+- Pick **1, 2 or 3 players** on the start screen.
+- Everyone answers the same photograph in turn on the same screen. Each pick
+  shows up in the roster along the bottom the moment it is tapped, so players
+  can see each other's answers and argue about them as they go. There is no
+  pass-the-phone screen — it is meant to be played together, out loud.
+- Results stack the players best-first, with the leader starred, each showing
+  their overall percentage plus their positive and negative splits.
+
+It is laid out for a phone held **sideways** — the photographs are 2.58:1, so
+landscape fits them far better than portrait. Held upright, the page shows a
+"turn your phone sideways" prompt instead of the game, with a *Continue anyway*
+escape for anyone on a desktop or a narrow window. Rotating mid-game does not
+lose progress.
+
+Scoring is identical to the short form; there are no population bands, since
+ranking players against each other is the point.
 
 ### What the short form cuts, and why
 
