@@ -163,12 +163,16 @@
   .options { flex: none; display: grid; grid-template-columns: 1fr; gap: var(--gap); align-content: center; }
   .opt {
     font-family: 'DM Sans', sans-serif;
-    font-size: var(--fs-md); font-weight: 500; color: var(--navy);
+    font-size: var(--fs-md); font-weight: 500; color: var(--navy); line-height: 1.2;
     background: var(--card-bg); border: 1.5px solid var(--border);
     border-radius: calc(var(--radius) * 0.7);
     padding: calc(var(--gap) * 1.15) var(--gap);
     cursor: pointer; text-align: center; width: 100%;
     min-height: clamp(34px, 7vmin, 54px);
+    /* Centre the label explicitly. Left to a button's own layout, Safari
+       drops the text toward the bottom once min-height makes the box taller
+       than the line, which Chromium does not do. */
+    display: flex; align-items: center; justify-content: center;
   }
   .opt:active { background: var(--parchment); }
   .opt.chosen { background: var(--navy); border-color: var(--navy); color: #FFFDF8; }
