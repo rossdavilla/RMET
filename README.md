@@ -34,9 +34,32 @@ share the same `img/` folder, so keep them in the same directory.
 
 It is laid out for a phone held **sideways** — the photographs are 2.58:1, so
 landscape fits them far better than portrait. Held upright, the page shows a
-"turn your phone sideways" prompt instead of the game, with a *Continue anyway*
-escape for anyone on a desktop or a narrow window. Rotating mid-game does not
-lose progress.
+"turn your phone sideways" prompt instead of the game, with an escape link for
+anyone on a desktop or a narrow window. Rotating mid-game does not lose progress.
+
+### Fitting a landscape phone
+
+A phone in landscape has very little height left once the browser takes its cut
+— an iPhone running Safari with the tab bar showing can be down around **225px**.
+Two things keep the layout inside that:
+
+- The start screen is **two columns**, so it needs roughly half the height a
+  stacked version would, and below 320px of height a media query compacts
+  everything further (the four answer buttons become a 2×2 grid). Verified with
+  no clipping all the way down to a 200px-tall viewport.
+- Height comes from **`visualViewport.height` via a `--app-h` custom property**,
+  not from `100vh`. iOS Safari's `100vh` counts the space behind its own
+  toolbars, which is what pushed the card off the top and bottom of the screen.
+  `100dvh` is the CSS fix but is unreliable on older iOS, so JS sets the value
+  and `100dvh` is only the fallback.
+
+**True fullscreen:** iPhone Safari has no Fullscreen API, so no page can hide
+the browser chrome on its own. The one way to get an edge-to-edge screen is
+*Share → Add to Home Screen* and launching from that icon — the meta tags for
+standalone mode are already in the file, so it opens with no browser UI at all.
+That is worth doing for a phone you will reuse in class, but it is too much
+friction to ask of students scanning a QR code; the layout above is what makes
+the in-browser case work.
 
 Scoring is identical to the short form; there are no population bands, since
 ranking players against each other is the point.

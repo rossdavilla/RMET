@@ -4,6 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#1C2B4A" />
+<!-- Added to the home screen, this opens with no browser chrome at all -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Eyes Test" />
+<meta name="mobile-web-app-capable" content="yes" />
 <title>Eyes Test — Head to Head</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
@@ -26,11 +31,17 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-  html, body { height: 100%; }
+  html { height: 100%; }
 
+  /* --app-h is set from JS to the real visible height. iOS Safari's 100vh
+     includes the area behind the toolbars, which is what pushed the card off
+     both ends of the screen; dvh is better but still not reliable on older
+     iOS, so JS has the final say. */
   body {
-    min-height: 100vh;
-    min-height: 100dvh;
+    height: 100dvh;
+    height: var(--app-h, 100dvh);
+    max-height: var(--app-h, 100dvh);
+    overflow: hidden;
     display: flex;
     font-family: 'DM Sans', sans-serif;
     color: var(--text);
@@ -100,11 +111,17 @@
   }
 
   /* ── Start ─────────────────────────────────────────────────────────── */
-  #start { justify-content: center; text-align: center; gap: 3px; }
-  #start h1 { font-size: 25px; font-weight: 700; line-height: 1.15; margin: 5px 0 3px; }
-  .sub { font-size: 13px; color: var(--muted); margin-bottom: 11px; }
-  .ask { font-size: 14px; font-weight: 500; color: var(--navy); margin-bottom: 7px; }
-  .pcount { display: flex; gap: 9px; justify-content: center; margin-bottom: 12px; }
+  /* Two columns, so the whole screen needs about half the height it would
+     stacked — landscape phones leave very little once Safari takes its cut. */
+  #start { justify-content: center; }
+  .start-grid { display: flex; align-items: center; gap: 24px; }
+  .start-left { flex: 1; min-width: 0; text-align: left; }
+  .start-left .label { text-align: left; }
+  .start-right { flex: none; width: 46%; max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 9px; }
+  #start h1 { font-size: 25px; font-weight: 700; line-height: 1.15; margin: 4px 0 5px; }
+  .sub { font-size: 13px; color: var(--muted); }
+  .ask { font-size: 14px; font-weight: 500; color: var(--navy); }
+  .pcount { display: flex; gap: 9px; justify-content: center; }
   .pbtn {
     font-family: 'Playfair Display', serif;
     font-size: 23px; font-weight: 700; color: var(--navy);
@@ -115,7 +132,7 @@
   .pbtn small { font-family: 'DM Sans', sans-serif; font-size: 9.5px; font-weight: 500; color: var(--muted); letter-spacing: 0.5px; }
   .pbtn.sel { background: var(--navy); color: #FFFDF8; border-color: var(--navy); }
   .pbtn.sel small { color: var(--gold-light); }
-  .cite { font-size: 10px; color: var(--muted); font-style: italic; margin-top: 9px; line-height: 1.4; }
+  .cite { font-size: 10px; color: var(--muted); font-style: italic; margin-top: 10px; line-height: 1.4; }
 
   /* ── Practice ──────────────────────────────────────────────────────── */
   #practice { justify-content: center; }
@@ -196,6 +213,41 @@
   .pos-dot, .neg-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
   .pos-dot { background: #46A86B; }
   .neg-dot { background: #D1684F; }
+
+  /* ── Short viewports ───────────────────────────────────────────────── */
+  /* A landscape phone leaves very little height once the browser takes its
+     cut — an iPhone with Safari's tab bar showing can be down around 225px.
+     This block must stay last so it wins over the base rules above. */
+  @media (max-height: 320px) {
+    .screen { padding: 7px 11px; }
+    .card { margin: 6px auto; width: calc(100% - 12px); }
+    #start h1 { font-size: 21px; margin: 2px 0 3px; }
+    .sub { font-size: 11.5px; }
+    .cite { font-size: 9px; margin-top: 7px; }
+    .start-grid { gap: 16px; }
+    .start-right { gap: 7px; }
+    .ask { font-size: 13px; }
+    .pbtn { font-size: 19px; padding: 5px 0; width: 78px; }
+    .btn { padding: 8px 20px; font-size: 14px; }
+    /* 2x2 keeps the options half as tall as a single stack */
+    .options { display: grid; grid-template-columns: 1fr 1fr; align-content: center; gap: 6px; width: 46%; max-width: 360px; }
+    .opt { font-size: 13.5px; padding: 8px 5px; border-radius: 8px; }
+    .top { margin-bottom: 5px; }
+    .roster { margin-top: 5px; gap: 5px; }
+    .rrow { padding: 4px 7px; gap: 5px; }
+    .rnum { width: 18px; height: 18px; font-size: 10.5px; }
+    .rtext { font-size: 11.5px; }
+    #results { gap: 5px; }
+    #results h2 { font-size: 18px; }
+    .btn.small { padding: 5px 12px; font-size: 11.5px; }
+    .pcard { padding: 5px 10px; gap: 9px; grid-template-columns: 96px 1fr 48px 88px; }
+    .pname { font-size: 14px; }
+    .big-pct { font-size: 18px; }
+    .splits { font-size: 10px; }
+    .mainbar { height: 12px; }
+    .prow img { max-height: 130px; }
+    .pnote { font-size: 12.5px; line-height: 1.45; }
+  }
 </style>
 </head>
 <body>
@@ -215,17 +267,23 @@
 
   <!-- Start -->
   <section class="screen active" id="start">
-    <div class="label">Psychology Assessment Tool</div>
-    <h1>Reading the Mind in the Eyes</h1>
-    <div class="sub">Head to head &mdash; 18 photographs, one phone, take turns.</div>
-    <div class="ask">How many players?</div>
-    <div class="pcount" id="pcount">
-      <button class="pbtn" data-n="1">1<small>SOLO</small></button>
-      <button class="pbtn sel" data-n="2">2<small>PLAYERS</small></button>
-      <button class="pbtn" data-n="3">3<small>PLAYERS</small></button>
+    <div class="start-grid">
+      <div class="start-left">
+        <div class="label">Psychology Assessment Tool</div>
+        <h1>Reading the Mind in the Eyes</h1>
+        <div class="sub">Head to head &mdash; 18 photographs, one phone, take turns.</div>
+        <div class="cite">Baron-Cohen, Wheelwright, Hill, Raste &amp; Plumb (2001). Free for academic, non-commercial use.</div>
+      </div>
+      <div class="start-right">
+        <div class="ask">How many players?</div>
+        <div class="pcount" id="pcount">
+          <button class="pbtn" data-n="1">1<small>SOLO</small></button>
+          <button class="pbtn sel" data-n="2">2<small>PLAYERS</small></button>
+          <button class="pbtn" data-n="3">3<small>PLAYERS</small></button>
+        </div>
+        <button class="btn" id="start-btn">Start</button>
+      </div>
     </div>
-    <div><button class="btn" id="start-btn">Start</button></div>
-    <div class="cite">Baron-Cohen, Wheelwright, Hill, Raste &amp; Plumb (2001). Free for academic, non-commercial use.</div>
   </section>
 
   <!-- Practice -->
@@ -318,6 +376,22 @@ function show(id) {
 }
 
 function playerName(i) { return playerCount === 1 ? 'You' : 'Player ' + (i + 1); }
+
+// ── Real viewport height ────────────────────────────────────────────────
+// iOS Safari's 100vh counts the space behind its own toolbars, so the card
+// used to run off the top and bottom of the screen. visualViewport reports
+// what is actually visible; feed that to CSS and the layout always fits.
+function setAppHeight() {
+  const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+  document.documentElement.style.setProperty('--app-h', Math.round(h) + 'px');
+}
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 200));
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', setAppHeight);
+  window.visualViewport.addEventListener('scroll', setAppHeight);
+}
 
 // ── Rotate prompt ───────────────────────────────────────────────────────
 $('anyway').addEventListener('click', () => document.body.classList.add('rotate-dismissed'));
